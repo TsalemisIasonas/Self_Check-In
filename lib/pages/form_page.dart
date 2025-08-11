@@ -12,13 +12,11 @@ class FormPage extends StatefulWidget {
 class _FormPageState extends State<FormPage> {
   final List<String> fields = ['Όνομα', 'Επώνυμο','Ημ/νια Γέννησης','ΑΔΤ','Εθνικότητα','Τηλέφωνο','Email'];
 
-  // A list of TextEditingControllers to manage the text in each input field
   final List<TextEditingController> _controllers = [];
 
   @override
   void initState() {
     super.initState();
-    // Initialize a controller for each field in the list
     for (var i = 0; i < fields.length; i++) {
       _controllers.add(TextEditingController());
     }
@@ -26,14 +24,12 @@ class _FormPageState extends State<FormPage> {
 
   @override
   void dispose() {
-    // Dispose of the controllers when the widget is removed to free up resources
     for (var controller in _controllers) {
       controller.dispose();
     }
     super.dispose();
   }
 
-  // This function is called when the "Save" button is pressed
   Future<void> _saveAndSendApiData() async {
     // Check if any field is empty
     bool hasEmptyField = false;
@@ -58,19 +54,19 @@ class _FormPageState extends State<FormPage> {
         data[fields[i]] = _controllers[i].text.trim();
       }
 
+      print(data);
+
       await apiTest(data);
     }
   }
 
-  // The apiTest function is modified to accept the data map from the form
   Future<void> apiTest(Map<String, String> formData) async {
-    final url = Uri.parse('http://localhost:7024/exesjson');
+    final url = Uri.parse('http://192.168.90.73:7024/exesjson/elogin');
 
-    // Combine form data with your API request body
     final Map<String, dynamic> requestBody = {
-      ...formData, // Spread the data from the form
+      //...formData,
       "apicode": "VEUCAI0TVKJRPJA",
-      "applicationname": "Hercules.25.01.12.106022b",
+      "applicationname": "25.01.12.106022b",
       "databasealias": "test_hotel",
       "username": "demo",
       "password": "demo",
@@ -84,6 +80,7 @@ class _FormPageState extends State<FormPage> {
       );
 
       if (response.statusCode == 200) {
+        print(requestBody);
         print('Response body: ${response.body}');
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -123,59 +120,58 @@ class _FormPageState extends State<FormPage> {
         backgroundColor: Colors.red[50], // Light red
         elevation: 0,
       ),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                ...fields.asMap().entries.map((entry) {
-                  int index = entry.key;
-                  String fieldName = entry.value;
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 16.0),
-                    child: TextField(
-                      controller: _controllers[index],
-                      style: const TextStyle(color: Colors.black),
-                      decoration: InputDecoration(
-                        hintText: fieldName,
-                        hintStyle: const TextStyle(color: Colors.grey),
-                        filled: true,
-                        fillColor: Colors.white,
-                        enabledBorder: OutlineInputBorder(
-                          borderSide: const BorderSide(color: Colors.black54),
-                          borderRadius: BorderRadius.circular(10.0),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderSide: const BorderSide(color: Colors.redAccent, width: 2.0),
-                          borderRadius: BorderRadius.circular(10.0),
-                        ),
+      body: Padding(
+        padding: const EdgeInsets.all(16),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              SizedBox(height: 20,),
+              ...fields.asMap().entries.map((entry) {
+                int index = entry.key;
+                String fieldName = entry.value;
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 16.0),
+                  child: TextField(
+                    controller: _controllers[index],
+                    style: const TextStyle(color: Colors.black),
+                    decoration: InputDecoration(
+                      hintText: fieldName,
+                      hintStyle: const TextStyle(color: Colors.grey),
+                      filled: true,
+                      fillColor: Colors.white,
+                      enabledBorder: OutlineInputBorder(
+                        borderSide: const BorderSide(color: Colors.black54),
+                        borderRadius: BorderRadius.circular(10.0),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: const BorderSide(color: Colors.redAccent, width: 2.0),
+                        borderRadius: BorderRadius.circular(10.0),
                       ),
                     ),
-                  );
-                }).toList(),
-                // The save and send button
-                ElevatedButton(
-                  onPressed: _saveAndSendApiData,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.redAccent,
-                    padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 15),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10.0),
-                    ),
                   ),
-                  child: const Text(
-                    "Αποθήκευση", // "Save"
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
+                );
+              }).toList(),
+              SizedBox(height: 40),
+              ElevatedButton(
+                onPressed: _saveAndSendApiData,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.redAccent,
+                  padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 15),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10.0),
                   ),
                 ),
-              ],
-            ),
+                child: const Text(
+                  "Αποθήκευση", // "Save"
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       ),
