@@ -9,14 +9,16 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-
-  double _containerHeight = 0.0;
+  // We use a double? so we can represent a state where the height
+  // hasn't been set yet (null), which is better than 0.0.
+  double? _containerHeight;
 
   @override
   void initState() {
     super.initState();
-    
-    Future.delayed(const Duration(milliseconds: 100), () {
+    // Use `WidgetsBinding.instance.addPostFrameCallback` for a more reliable
+    // way to get screen size after the first frame has been built.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
       setState(() {
         _containerHeight = MediaQuery.of(context).size.height;
       });
@@ -30,20 +32,27 @@ class _HomePageState extends State<HomePage> {
       body: Align(
         alignment: Alignment.bottomCenter,
         child: AnimatedContainer(
-          height: _containerHeight,
+          // Check for null and set height to 0.0 if not yet initialized.
+          height: _containerHeight ?? 0.0,
           duration: const Duration(milliseconds: 900),
           child: Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // const Icon(
-                //   Icons.check_rounded,
-                //   size: 100,
-                //   color: Colors.redAccent,
-                // ),
-                Placeholder(fallbackHeight: MediaQuery.of(context).size.height * 0.3,),
-                SizedBox(height: MediaQuery.of(context).size.height * 0.2),
-                TextButton(
+                // Flexible spacer to push the content down
+                const Spacer(flex: 3), 
+                
+                // Using a regular Icon and a Spacer for flexible spacing
+                const Icon(
+                  Icons.check_circle_outline,
+                  size: 100,
+                  color: Colors.redAccent,
+                ),
+
+                // Another flexible spacer to push the button up
+                const Spacer(flex: 2),
+
+                ElevatedButton(
                   onPressed: () {
                     Navigator.of(context).push(
                       MaterialPageRoute(
@@ -51,15 +60,25 @@ class _HomePageState extends State<HomePage> {
                       ),
                     );
                   },
-                  child: const Text(
-                    "ΣΥΝΕΧΕΙΑ",
-                    style: TextStyle(
-                      fontSize: 30,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.redAccent,
+                    foregroundColor: Colors.white,
+                    minimumSize: Size(
+                        MediaQuery.of(context).size.width * 0.2, 60),
+                    textStyle: const TextStyle(
+                      fontSize: 24,
                       fontWeight: FontWeight.w400,
-                      color: Colors.black,
                     ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30.0),
+                    ),
+                    elevation: 5,
                   ),
+                  child: const Text("ΣΥΝΕΧΕΙΑ"),
                 ),
+
+                // Add a small spacer at the bottom for a little padding
+                const SizedBox(height: 20),
               ],
             ),
           ),
