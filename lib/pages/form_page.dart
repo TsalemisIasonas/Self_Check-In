@@ -52,7 +52,7 @@ class _FormPageState extends State<FormPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Παρακαλώ συμπληρώστε όλα τα πεδία.'),
-          backgroundColor: Colors.redAccent,
+          backgroundColor: Colors.red,
         ),
       );
     } else {
@@ -72,9 +72,9 @@ class _FormPageState extends State<FormPage> {
 
     final Map<String, dynamic> requestBody = {
       //...formData,
-      "apicode": "250KNXMNDIKOCYA",
+      "apicode": "7FEIS52QBCCZI7A",
       "applicationname": "Hercules.MyPylonCommercial",
-      "databasealias": "test_hotel",
+      "databasealias": "test",
       "username": "demo",
       "password": "demo",
     };
@@ -133,69 +133,80 @@ class _FormPageState extends State<FormPage> {
       backgroundColor: Colors.white,
       appBar: AppBar(
         title: const Text("Check In", style: TextStyle(color: Colors.black)),
-        backgroundColor: Colors.red[50], // Light red
+        backgroundColor: Colors.grey[200],
         elevation: 0,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              SizedBox(height: 20),
-              ...fields.asMap().entries.map((entry) {
-                int index = entry.key;
-                String fieldName = entry.value;
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 16.0),
-                  child: TextField(
-                    controller: _controllers[index],
-                    style: const TextStyle(color: Colors.black),
-                    decoration: InputDecoration(
-                      hintText: fieldName,
-                      hintStyle: const TextStyle(color: Colors.grey),
-                      filled: true,
-                      fillColor: Colors.white,
-                      enabledBorder: OutlineInputBorder(
-                        borderSide: const BorderSide(color: Colors.black54),
-                        borderRadius: BorderRadius.circular(10.0),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderSide: const BorderSide(
-                          color: Colors.redAccent,
-                          width: 2.0,
+      body: Stack(
+        children: [
+          Image.asset(
+            'assets/images/background.jpg',
+            fit: BoxFit.cover,
+            width: double.infinity,
+            height: double.infinity,
+          ),
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  SizedBox(height: 20),
+                  ...fields.asMap().entries.map((entry) {
+                    int index = entry.key;
+                    String fieldName = entry.value;
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 16.0),
+                      child: TextField(
+                        controller: _controllers[index],
+                        style: const TextStyle(color: Colors.black),
+                        decoration: InputDecoration(
+                          hintText: fieldName,
+                          hintStyle: const TextStyle(color: Colors.black54),
+                          filled: true,
+                          fillColor: Colors.white24,
+                          enabledBorder: OutlineInputBorder(
+                            borderSide: const BorderSide(color: Colors.black54),
+                            borderRadius: BorderRadius.circular(10.0),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderSide: const BorderSide(
+                              color: Color.fromARGB(255, 130, 110, 164),
+                              width: 2.0,
+                            ),
+                            borderRadius: BorderRadius.circular(10.0),
+                          ),
                         ),
+                      ),
+                    );
+                  }).toList(),
+                  SizedBox(height: 40),
+                  ElevatedButton(
+                    onPressed: _saveAndSendApiData,
+                    style: ElevatedButton.styleFrom(
+                      elevation: 20,
+                      backgroundColor: Colors.purple[500],
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 50,
+                        vertical: 15,
+                      ),
+                      shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10.0),
                       ),
                     ),
+                    child: const Text(
+                      "Αποθήκευση", // "Save"
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
-                );
-              }).toList(),
-              SizedBox(height: 40),
-              ElevatedButton(
-                onPressed: _saveAndSendApiData,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.redAccent,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 50,
-                    vertical: 15,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10.0),
-                  ),
-                ),
-                child: const Text(
-                  "Αποθήκευση", // "Save"
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+                ],
               ),
-            ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }
