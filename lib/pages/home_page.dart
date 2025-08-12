@@ -9,7 +9,8 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  double? _containerHeight;
+
+  double _contentOpacity = 0.0;
 
   @override
   void initState() {
@@ -17,7 +18,8 @@ class _HomePageState extends State<HomePage> {
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       setState(() {
-        _containerHeight = MediaQuery.of(context).size.height;
+        // We set the opacity to 1.0 to trigger the fade-in animation.
+        _contentOpacity = 1.0;
       });
     });
   }
@@ -39,28 +41,32 @@ class _HomePageState extends State<HomePage> {
             width: double.infinity,
             height: double.infinity,
           ),
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: AnimatedContainer(
-              // Check for null and set height to 0.0 if not yet initialized.
-              height: _containerHeight ?? 0.0,
-              duration: const Duration(milliseconds: 900),
-              child: Center(
+          AnimatedOpacity(
+            opacity: _contentOpacity,
+            duration: const Duration(milliseconds: 1200),
+            child: Align(
+              alignment: Alignment.bottomCenter,
+              child: SafeArea(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: [
-                    SizedBox(height: MediaQuery.of(context).size.height * 0.1,),
-                    Text("ΚΑΛΩΣ ΗΡΘΑΤΕ", style: TextStyle(
-                      fontSize: 35, 
-                      fontWeight: FontWeight.w300
-                    ),),
+                    const SizedBox(height: 70,),
+                    const Text(
+                      "ΚΑΛΩΣ ΗΡΘΑΤΕ",
+                      style: TextStyle(
+                        fontSize: 35,
+                        fontWeight: FontWeight.w300,
+                        color: Colors.black,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
                     Image.asset(
                       'assets/images/checkin.jpg',
                       fit: BoxFit.cover,
                       width: MediaQuery.of(context).size.width * 0.8,
                       height: MediaQuery.of(context).size.width * 0.8,
                     ),
-                    SizedBox(height: MediaQuery.of(context).size.height * 0.1),
+                    const SizedBox(height: 100),
                     ElevatedButton(
                       onPressed: () {
                         Navigator.of(context).push(
@@ -87,9 +93,6 @@ class _HomePageState extends State<HomePage> {
                       ),
                       child: const Text("ΣΥΝΕΧΕΙΑ"),
                     ),
-
-                    // Add a small spacer at the bottom for a little padding
-                    const SizedBox(height: 60),
                   ],
                 ),
               ),

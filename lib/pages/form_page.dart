@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../components/my_alert_dialog.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
@@ -141,7 +142,7 @@ class _FormPageState extends State<FormPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Αποτυχία αιτήματος: ${response.statusCode}'),
-            backgroundColor: Colors.red,
+            backgroundColor: Colors.red[200],
           ),
         );
       }
@@ -151,29 +152,18 @@ class _FormPageState extends State<FormPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Παρουσιάστηκε σφάλμα: $e'),
-          backgroundColor: Colors.red,
+          backgroundColor: Colors.red[200],
         ),
       );
     }
   }
 
   // Helper function to show a custom alert dialog
-  void _showAlertDialog(String title, String content) {
+  void _showAlertDialog(String title, String content, Color? color) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text(title),
-          content: Text(content),
-          actions: <Widget>[
-            TextButton(
-              child: const Text('OK'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-          ],
-        );
+        return MyAlertDialog(title: title, content: content, color: color);
       },
     );
   }
@@ -183,7 +173,7 @@ class _FormPageState extends State<FormPage> {
 
     if (_cookie == null) {
       if (!mounted) return;
-      _showAlertDialog('Σφάλμα', 'Απαιτείται σύνδεση.');
+      _showAlertDialog('Σφάλμα', 'Απαιτείται σύνδεση.', Colors.red);
       return;
     }
 
@@ -211,19 +201,21 @@ class _FormPageState extends State<FormPage> {
           _showAlertDialog(
             'Σφάλμα',
             'Παρουσιάστηκε σφάλμα κατά την αποστολή: ${decodedBody["Error"]}',
+            Colors.orange[200]
           );
         } else {
-          _showAlertDialog('Επιτυχία', 'Τα δεδομένα στάλθηκαν με επιτυχία.');
+          _showAlertDialog('Επιτυχία', 'Τα δεδομένα στάλθηκαν με επιτυχία.', Colors.green[200]);
         }
       } else {
         _showAlertDialog(
           'Σφάλμα',
           'Αποτυχία αιτήματος με κωδικό: ${response.statusCode}',
+          Colors.red[200]
         );
       }
     } catch (e) {
       if (!mounted) return;
-      _showAlertDialog('Σφάλμα', 'Παρουσιάστηκε σφάλμα: $e');
+      _showAlertDialog('Σφάλμα', 'Παρουσιάστηκε σφάλμα: $e', Colors.red[200]);
     }
   }
 
