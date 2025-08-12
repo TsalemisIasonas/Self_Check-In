@@ -47,9 +47,19 @@ class _HomePageState extends State<HomePage> {
               duration: const Duration(milliseconds: 900),
               child: Center(
                 child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisAlignment: MainAxisAlignment.start,
                   children: [
-                    Placeholder(),
+                    SizedBox(height: MediaQuery.of(context).size.height * 0.1,),
+                    Text("ΚΑΛΩΣ ΗΡΘΑΤΕ", style: TextStyle(
+                      fontSize: 35, 
+                      fontWeight: FontWeight.w300
+                    ),),
+                    Image.asset(
+                      'assets/images/checkin.jpg',
+                      fit: BoxFit.cover,
+                      width: MediaQuery.of(context).size.width * 0.8,
+                      height: MediaQuery.of(context).size.width * 0.8,
+                    ),
                     SizedBox(height: MediaQuery.of(context).size.height * 0.1),
                     ElevatedButton(
                       onPressed: () {
@@ -63,11 +73,11 @@ class _HomePageState extends State<HomePage> {
                         backgroundColor: Colors.purple[500],
                         foregroundColor: Colors.white,
                         minimumSize: Size(
-                          MediaQuery.of(context).size.width * 0.2,
+                          MediaQuery.of(context).size.width * 0.6,
                           60,
                         ),
                         textStyle: const TextStyle(
-                          fontSize: 24,
+                          fontSize: 20,
                           fontWeight: FontWeight.w400,
                         ),
                         shape: RoundedRectangleBorder(
