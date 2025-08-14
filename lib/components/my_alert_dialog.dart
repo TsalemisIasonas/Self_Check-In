@@ -27,6 +27,5 @@ class MyAlertDialog extends StatelessWidget {
         ),
       ],
     );
-    ;
   }
 }

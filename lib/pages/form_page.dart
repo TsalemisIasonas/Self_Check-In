@@ -96,9 +96,9 @@ class _FormPageState extends State<FormPage> {
     final url = Uri.parse('http://192.168.90.73:7024/exesjson/elogin');
 
     final Map<String, dynamic> requestBody = {
-      "apicode": "7FEIS52QBCCZI7A",
+      "apicode": "WDUQ52FIWWOEXUG",
       "applicationname": "Hercules.MyPylonCommercial",
-      "databasealias": "test",
+      "databasealias": "APITEST",
       "username": "demo",
       "password": "demo",
     };
@@ -179,7 +179,7 @@ class _FormPageState extends State<FormPage> {
 
     final Map<String, dynamic> requestBody = {
       "cookie": _cookie,
-      "apicode": "7FEIS52QBCCZI7A",
+      "apicode": "WDUQ52FIWWOEXUG",
       "entitycode": "GetScript",
       "packagenumber": 1,
       "packagesize": 2000,
@@ -200,11 +200,13 @@ class _FormPageState extends State<FormPage> {
         if (decodedBody['Status'] == 'ERROR') {
           _showAlertDialog(
             'Σφάλμα',
-            'Παρουσιάστηκε σφάλμα κατά την αποστολή: ${decodedBody["Error"]}',
+            'Παρουσιάστηκε σφάλμα κατά την αποστολή:\n ${decodedBody["Error"]}',
             Colors.orange[200]
           );
+          print(response.body);
         } else {
           _showAlertDialog('Επιτυχία', 'Τα δεδομένα στάλθηκαν με επιτυχία.', Colors.green[200]);
+          print(response.body);
         }
       } else {
         _showAlertDialog(
