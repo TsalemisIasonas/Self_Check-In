@@ -1,5 +1,8 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:path_provider/path_provider.dart';
 import '../components/my_alert_dialog.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
@@ -37,7 +40,6 @@ class _FormPageState extends State<FormPage> {
   Map<String, dynamic>? parameters;
   bool _isLoading = false;
 
-
   @override
   void initState() {
     super.initState();
@@ -60,11 +62,35 @@ class _FormPageState extends State<FormPage> {
   }
 
   Future<Map<String, dynamic>> loadParameters() async {
-    final String jsonString = await rootBundle.loadString(
-      'assets/data/parameters.json',
-    );
-    final Map<String, dynamic> parameters = jsonDecode(jsonString);
-    return parameters;
+    try {
+      // Get the path to the application's document directory
+      final directory = await getApplicationDocumentsDirectory();
+      final localFilePath = '${directory.path}/parameters.json';
+      final localFile = File(localFilePath);
+
+      //Check if the local file exists.
+      if (await localFile.exists()) {
+        //If it exists, read from the local file.
+        final jsonString = await localFile.readAsString();
+        return jsonDecode(jsonString);
+      } else {
+        // 4. If the local file doesn't exist, fall back to the asset file.
+        final String jsonString = await rootBundle.loadString(
+          'assets/data/parameters.json',
+        );
+        return jsonDecode(jsonString);
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            "Σφάλμα κατά την ανάγνωση των παραμέτρων",
+            style: TextStyle(backgroundColor: Colors.red),
+          ),
+        ),
+      );
+      return {};
+    }
   }
 
   Future<void> _saveAndSendApiData() async {
@@ -158,7 +184,7 @@ class _FormPageState extends State<FormPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Αποτυχία αιτήματος: ${response.statusCode}'),
-            backgroundColor: Colors.red[200],
+            backgroundColor: Colors.red,
           ),
         );
       }
@@ -184,7 +210,9 @@ class _FormPageState extends State<FormPage> {
   }
 
   Future<void> postData(Map<String, dynamic> formData) async {
-    final url = Uri.parse('http://${parameters?['ipaddress']}:${parameters?['port']}}/exesjson/postdata');
+    final url = Uri.parse(
+      'http://${parameters?['ipaddress']}:${parameters?['port']}}/exesjson/postdata',
+    );
 
     if (_cookie == null) {
       if (!mounted) return;

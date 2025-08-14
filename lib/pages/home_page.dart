@@ -31,6 +31,24 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
+  bool _checkEssentialKeys(Map<String, dynamic>? params) {
+    List _essentialKeys = [
+      'apicode',
+      'ipaddress',
+      'port',
+      'databasealias',
+      'username',
+      'password',
+    ];
+    if (params == null) return false;
+    return _essentialKeys.every(
+      (key) =>
+          params.containsKey(key) &&
+          params[key] is String &&
+          params[key].isNotEmpty,
+    );
+  }
+
   Future<void> _initDataAndControllers() async {
     final directory = await getApplicationDocumentsDirectory();
     _localFilePath = '${directory.path}/parameters.json';
@@ -52,6 +70,10 @@ class _HomePageState extends State<HomePage> {
         _controllers.add(controller);
       });
     }
+
+    Future.delayed(const Duration(seconds: 1), () {
+      if (!_checkEssentialKeys(parameters)) writeParameters();
+    });
 
     setState(() {});
   }
@@ -87,6 +109,7 @@ class _HomePageState extends State<HomePage> {
         );
       }
     }
+    //_initDataAndControllers();
   }
 
   @override
@@ -118,9 +141,11 @@ class _HomePageState extends State<HomePage> {
               child: Column(
                 mainAxisSize: MainAxisSize.max,
                 children: parameters!.entries.map((entry) {
-                  final int index = parameters!.keys.toList().indexOf(entry.key);
+                  final int index = parameters!.keys.toList().indexOf(
+                    entry.key,
+                  );
                   final String fieldName = entry.key;
-            
+
                   return Padding(
                     padding: const EdgeInsets.only(bottom: 16.0),
                     child: TextField(
@@ -130,8 +155,8 @@ class _HomePageState extends State<HomePage> {
                         hintText: fieldName,
                         hintStyle: const TextStyle(color: Colors.black54),
                         filled: true,
-                        fillColor:
-                            Colors.grey[300], // Changed to a more visible color.
+                        fillColor: Colors
+                            .grey[300], // Changed to a more visible color.
                         enabledBorder: OutlineInputBorder(
                           borderSide: const BorderSide(color: Colors.black54),
                           borderRadius: BorderRadius.circular(10.0),
