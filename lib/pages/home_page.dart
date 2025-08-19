@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:pylon_hotel_self_checkin/components/variables_dialog.dart';
 import 'package:pylon_hotel_self_checkin/pages/form_page.dart';
 
 class HomePage extends StatefulWidget {
@@ -13,7 +14,7 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  Alignment _contentAlignment = const Alignment(-2.0, 0.2);
+  Alignment _contentAlignment = Alignment(-20.0, 0.2);
 
   final List<TextEditingController> _controllers = [];
   Map<String, dynamic>? parameters;
@@ -100,7 +101,9 @@ class _HomePageState extends State<HomePage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Parameters saved to $_localFilePath')),
+          
         );
+        print(_localFilePath);
       }
     } catch (e) {
       if (mounted) {
@@ -128,80 +131,10 @@ class _HomePageState extends State<HomePage> {
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return AlertDialog(
-          backgroundColor: Colors.grey[300],
-          title: const Text(
-            "ΠΑΡΑΜΕΤΡΟΙ",
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.w400),
-          ),
-          content: SizedBox(
-            width: MediaQuery.of(context).size.width * 0.8,
-            height: MediaQuery.of(context).size.width * 0.8,
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.max,
-                children: parameters!.entries.map((entry) {
-                  final int index = parameters!.keys.toList().indexOf(
-                    entry.key,
-                  );
-                  final String fieldName = entry.key;
-
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 16.0),
-                    child: TextField(
-                      controller: _controllers[index],
-                      style: const TextStyle(color: Colors.black),
-                      decoration: InputDecoration(
-                        hintText: fieldName,
-                        hintStyle: const TextStyle(color: Colors.black54),
-                        filled: true,
-                        fillColor: Colors
-                            .grey[300], // Changed to a more visible color.
-                        enabledBorder: OutlineInputBorder(
-                          borderSide: const BorderSide(color: Colors.black54),
-                          borderRadius: BorderRadius.circular(10.0),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderSide: const BorderSide(
-                            color: Color.fromARGB(255, 130, 110, 164),
-                            width: 2.0,
-                          ),
-                          borderRadius: BorderRadius.circular(10.0),
-                        ),
-                      ),
-                    ),
-                  );
-                }).toList(),
-              ),
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text(
-                "AΚΥΡΟ",
-                style: TextStyle(
-                  color: Colors.black,
-                  fontWeight: FontWeight.w400,
-                ),
-              ),
-            ),
-            TextButton(
-              onPressed: () {
-                _saveParameters();
-                Navigator.of(context).pop();
-              },
-              child: const Text(
-                "ΑΠΟΘΗΚΕΥΣΗ",
-                style: TextStyle(
-                  color: Colors.black,
-                  fontWeight: FontWeight.w400,
-                ),
-              ),
-            ),
-          ],
+        return VariablesDialog(
+          parameters: parameters!,
+          controllers: _controllers,
+          saveParameters: _saveParameters,
         );
       },
     );
@@ -210,7 +143,8 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      //backgroundColor: Colors.white,
+      // This is a crucial property for handling the keyboard
+      resizeToAvoidBottomInset: true,
       appBar: AppBar(
         title: const Text("Check In", style: TextStyle(color: Colors.black)),
         backgroundColor: Colors.purple[50],
@@ -230,9 +164,7 @@ class _HomePageState extends State<HomePage> {
             width: double.infinity,
             height: double.infinity,
           ),
-          AnimatedAlign(
-            alignment: _contentAlignment,
-            duration: const Duration(milliseconds: 1000),
+          SingleChildScrollView(
             child: SafeArea(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.start,
@@ -247,11 +179,15 @@ class _HomePageState extends State<HomePage> {
                     ),
                   ),
                   const SizedBox(height: 20),
-                  Image.asset(
-                    'assets/images/checkin.jpg',
-                    fit: BoxFit.cover,
-                    width: MediaQuery.of(context).size.width * 0.8,
-                    height: MediaQuery.of(context).size.width * 0.8,
+                  AnimatedAlign(
+                    alignment: _contentAlignment,
+                    duration: const Duration(milliseconds: 1000),
+                    child: Image.asset(
+                      'assets/images/checkin.jpg',
+                      fit: BoxFit.cover,
+                      width: MediaQuery.of(context).size.width * 0.8,
+                      height: MediaQuery.of(context).size.width * 0.8,
+                    ),
                   ),
                   const SizedBox(height: 100),
                   ElevatedButton(
