@@ -22,7 +22,8 @@ class MyAlertDialog extends StatelessWidget {
         TextButton(
           child: const Text('OK'),
           onPressed: () {
-            Navigator.of(context).pop();
+            color != Colors.green ? Navigator.of(context).pop() :
+            Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
           },
         ),
       ],
