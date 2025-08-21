@@ -1,5 +1,4 @@
 import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
@@ -15,24 +14,27 @@ class FormPage extends StatefulWidget {
 }
 
 class _FormPageState extends State<FormPage> {
+  // Key to validate the entire form
+  final _formKey = GlobalKey<FormState>();
+
   final List<String> inputFields = [
-    'Όνομα',
-    'Επώνυμο',
-    'Ημ/νια Γέννησης',
-    'ΑΔΤ',
-    'Εθνικότητα',
-    'Τηλέφωνο',
+    'Όνομα / Name',
+    'Επώνυμο / Surname',
+    'Ημ/νια Γέννησης / Date of Birth',
+    'ΑΔΤ / ID Number',
+    'Εθνικότητα / Nationality',
+    'Τηλέφωνο / Phone',
     'Email',
   ];
 
   final List<String> fields = [
-    'CNTCFIRSTNAME',
-    'CNTCLASTNAME',
-    'CNTCBIRTHDATE',
-    'CNTCIDENTITYCARDNUMBER',
-    'CNTCNATIONALITY',
-    'PRIMARYBRANCHPHONE1',
-    'PRIMARYBRANCHEMAIL',
+    'FIRSTNAME',
+    'LASTNAME',
+    'DATEOFBIRTH',
+    'DOCNUMBER',
+    'NATIONALITY',
+    'TELEPHONE',
+    'EMAIL',
   ];
 
   final List<TextEditingController> _controllers = [];
@@ -61,32 +63,84 @@ class _FormPageState extends State<FormPage> {
     super.dispose();
   }
 
+  // --- NEW: Validator functions for each field type ---
+  String? _validateGeneric(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'Αυτό το πεδίο είναι υποχρεωτικό.';
+    }
+    return null;
+  }
+
+  String? _validateEmail(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'Παρακαλώ εισάγετε το email σας.';
+    }
+    final emailRegex = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
+    if (!emailRegex.hasMatch(value)) {
+      return 'Παρακαλώ εισάγετε ένα έγκυρο email.';
+    }
+    return null;
+  }
+
+  String? _validatePhoneNumber(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'Παρακαλώ εισάγετε τον αριθμό τηλεφώνου σας.';
+    }
+    if (!RegExp(r'^\d{10}$').hasMatch(value)) {
+      return 'Παρακαλώ εισάγετε έναν έγκυρο 10-ψήφιο αριθμό.';
+    }
+    return null;
+  }
+
+  // Create a list of validator functions corresponding to the fields
+  late final List<String? Function(String?)> _validators = [
+    _validateGeneric,      // Όνομα
+    _validateGeneric,      // Επώνυμο
+    _validateGeneric,      // Ημ/νια Γέννησης
+    _validateGeneric,      // ΑΔΤ
+    _validateGeneric,      // Εθνικότητα
+    _validatePhoneNumber,  // Τηλέφωνο
+    _validateEmail,        // Email
+  ];
+
+  // Helper method to determine keyboard type
+  TextInputType _getKeyboardType(String fieldName) {
+    switch (fieldName) {
+      case 'Email':
+        return TextInputType.emailAddress;
+      case 'Τηλέφωνο':
+        return TextInputType.phone;
+      // case 'Ημ/νια Γέννησης':
+      //   return TextInputType.datetime;
+      default:
+        return TextInputType.text;
+    }
+  }
+
   Future<Map<String, dynamic>> loadParameters() async {
     try {
-      // Get the path to the application's document directory
       final directory = await getApplicationDocumentsDirectory();
       final localFilePath = '${directory.path}/parameters.json';
       final localFile = File(localFilePath);
 
-      //Check if the local file exists.
       if (await localFile.exists()) {
-        //If it exists, read from the local file.
         final jsonString = await localFile.readAsString();
         return jsonDecode(jsonString);
       } else {
-        // 4. If the local file doesn't exist, fall back to the asset file.
         final String jsonString = await rootBundle.loadString(
           'assets/data/parameters.json',
         );
         return jsonDecode(jsonString);
       }
     } catch (e) {
+      if (!mounted) return {};
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            "Σφάλμα κατά την ανάγνωση των παραμέτρων",
-            style: TextStyle(backgroundColor: Colors.red),
+            "Σφάλμα κατά την ανάγνωση των παραμέτρων: $e",
+            style: const TextStyle(color: Colors.white),
           ),
+          backgroundColor: Colors.red,
         ),
       );
       return {};
@@ -94,37 +148,29 @@ class _FormPageState extends State<FormPage> {
   }
 
   Future<void> _saveAndSendApiData() async {
-    // Check if any field is empty
-    bool hasEmptyField = false;
-    for (var controller in _controllers) {
-      if (controller.text.trim().isEmpty) {
-        hasEmptyField = true;
-        break;
-      }
-    }
-
-    if (hasEmptyField) {
-      if (!mounted) return;
+    // NEW: Trigger the form's validation
+    if (!_formKey.currentState!.validate()) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Παρακαλώ συμπληρώστε όλα τα πεδία.'),
+          content: Text('Παρακαλώ συμπληρώστε σωστά όλα τα πεδία.', style: TextStyle(color: Colors.white)),
           backgroundColor: Colors.red,
         ),
       );
       return;
     }
 
-    final Map<String, dynamic> formData = {};
+    // Manual validation loop is now redundant and removed
+
+    final Map<String, dynamic> customerData = {};
     for (var i = 0; i < inputFields.length; i++) {
-      formData[fields[i]] = _controllers[i].text.trim();
+      customerData[fields[i]] = _controllers[i].text.trim();
     }
 
-    // Set loading state
     setState(() {
       _isLoading = true;
     });
 
-    await apiTest(formData);
+    await apiTest(customerData);
 
     setState(() {
       _isLoading = false;
@@ -132,14 +178,13 @@ class _FormPageState extends State<FormPage> {
   }
 
   Future<void> apiTest(Map<String, dynamic> formData) async {
-    //print('http://${parameters?["ipaddress"]}:${parameters?["port"]}/exesjson/elogin');
     final url = Uri.parse(
       'http://${parameters?["ipaddress"]}:${parameters?["port"]}/exesjson/elogin',
     );
 
     final Map<String, dynamic> requestBody = {
       "apicode": "${parameters?["apicode"]}",
-      "applicationname": "Hercules.MyPylonCommercial",
+      "applicationname": "Hercules.MyPylonHoReRe",
       "databasealias": "${parameters?["databasealias"]}",
       "username": "${parameters?["username"]}",
       "password": "${parameters?["password"]}",
@@ -163,6 +208,7 @@ class _FormPageState extends State<FormPage> {
             SnackBar(
               content: Text(
                 'Προέκυψε Σφάλμα μετά τη Σύνδεση: ${decodedBody['Error']}',
+                style: const TextStyle(color: Colors.white),
               ),
               backgroundColor: const Color.fromARGB(255, 226, 141, 56),
             ),
@@ -171,8 +217,8 @@ class _FormPageState extends State<FormPage> {
           _cookie = jsonDecode(decodedBody['Result'])['cookie'];
 
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Επιτυχής Σύνδεση'),
+            const SnackBar(
+              content: Text('Επιτυχής Σύνδεση', style: TextStyle(color: Colors.white)),
               backgroundColor: Colors.green,
             ),
           );
@@ -183,7 +229,7 @@ class _FormPageState extends State<FormPage> {
         print('Request failed with status: ${response.statusCode}.');
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Αποτυχία αιτήματος: ${response.statusCode}'),
+            content: Text('Αποτυχία αιτήματος: ${response.statusCode}', style: const TextStyle(color: Colors.white)),
             backgroundColor: Colors.red,
           ),
         );
@@ -193,8 +239,8 @@ class _FormPageState extends State<FormPage> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Παρουσιάστηκε σφάλμα: $e'),
-          backgroundColor: Colors.red[200],
+          content: Text('Παρουσιάστηκε σφάλμα: $e', style: const TextStyle(color: Colors.white)),
+          backgroundColor: Colors.red,
         ),
       );
     }
@@ -211,7 +257,7 @@ class _FormPageState extends State<FormPage> {
 
   Future<void> postData(Map<String, dynamic> formData) async {
     final url = Uri.parse(
-      'http://${parameters?['ipaddress']}:${parameters?['port']}}/exesjson/postdata',
+      'http://${parameters?['ipaddress']}:${parameters?['port']}/exesjson/postdata',
     );
 
     if (_cookie == null) {
@@ -222,11 +268,11 @@ class _FormPageState extends State<FormPage> {
 
     final Map<String, dynamic> requestBody = {
       "cookie": _cookie,
-      "apicode": "WDUQ52FIWWOEXUG",
-      "entitycode": "GetScript",
+      "apicode": "4ZK2NFG2YGIG9YA",
+      "entitycode": "GCSInsertCust",
       "packagenumber": 1,
       "packagesize": 2000,
-      "data": jsonEncode(formData),
+      "data": jsonEncode({"Customers": [formData]}),
     };
 
     try {
@@ -244,14 +290,14 @@ class _FormPageState extends State<FormPage> {
           _showAlertDialog(
             'Σφάλμα',
             'Παρουσιάστηκε σφάλμα κατά την αποστολή:\n ${decodedBody["Error"]}',
-            Colors.orange[200],
+            Colors.orange,
           );
           print(response.body);
         } else {
           _showAlertDialog(
             'Επιτυχία',
             'Τα δεδομένα στάλθηκαν με επιτυχία.',
-            Colors.green[200],
+            Colors.green,
           );
           print(response.body);
         }
@@ -259,12 +305,12 @@ class _FormPageState extends State<FormPage> {
         _showAlertDialog(
           'Σφάλμα',
           'Αποτυχία αιτήματος με κωδικό: ${response.statusCode}',
-          Colors.red[200],
+          Colors.red,
         );
       }
     } catch (e) {
       if (!mounted) return;
-      _showAlertDialog('Σφάλμα', 'Παρουσιάστηκε σφάλμα: $e', Colors.red[200]);
+      _showAlertDialog('Σφάλμα', 'Παρουσιάστηκε σφάλμα: $e', Colors.red);
     }
   }
 
@@ -285,82 +331,90 @@ class _FormPageState extends State<FormPage> {
             width: double.infinity,
             height: double.infinity,
           ),
-          Stack(
-            children: [
-              _isLoading
-                  ? Center(
-                      child: SizedBox(
-                        width: 100,
-                        height: 100,
-                        child: const CircularProgressIndicator(strokeWidth: 5),
-                      ),
-                    )
-                  : SizedBox.shrink(),
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: SingleChildScrollView(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const SizedBox(height: 20),
-                      ...inputFields.asMap().entries.map((entry) {
-                        int index = entry.key;
-                        String fieldName = entry.value;
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 16.0),
-                          child: TextField(
-                            controller: _controllers[index],
-                            style: const TextStyle(color: Colors.black),
-                            decoration: InputDecoration(
-                              hintText: fieldName,
-                              hintStyle: const TextStyle(color: Colors.black54),
-                              filled: true,
-                              fillColor: Colors.white24,
-                              enabledBorder: OutlineInputBorder(
-                                borderSide: const BorderSide(
-                                  color: Colors.black54,
-                                ),
-                                borderRadius: BorderRadius.circular(10.0),
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: SingleChildScrollView(
+              child: Form( // NEW: Form widget to enable validation
+                key: _formKey,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const SizedBox(height: 20),
+                    ...inputFields.asMap().entries.map((entry) {
+                      int index = entry.key;
+                      String fieldName = entry.value;
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 16.0),
+                        child: TextFormField( // NEW: Replaced TextField with TextFormField
+                          controller: _controllers[index],
+                          style: const TextStyle(color: Colors.black),
+                          decoration: InputDecoration(
+                            hintText: fieldName,
+                            hintStyle: const TextStyle(color: Colors.black54),
+                            filled: true,
+                            fillColor: Colors.white24,
+                            enabledBorder: OutlineInputBorder(
+                              borderSide: const BorderSide(
+                                color: Colors.black54,
                               ),
-                              focusedBorder: OutlineInputBorder(
-                                borderSide: const BorderSide(
-                                  color: Color.fromARGB(255, 130, 110, 164),
-                                  width: 2.0,
-                                ),
+                              borderRadius: BorderRadius.circular(10.0),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderSide: const BorderSide(
+                                color: Color.fromARGB(255, 130, 110, 164),
+                                width: 2.0,
+                              ),
+                              borderRadius: BorderRadius.circular(10.0),
+                            ),
+                            errorBorder: OutlineInputBorder( // NEW: Error border style
+                              borderSide: const BorderSide(color: Colors.red, width: 2.0),
+                              borderRadius: BorderRadius.circular(10.0),
+                            ),
+                            focusedErrorBorder: OutlineInputBorder( // NEW: Error border when focused
+                              borderSide: const BorderSide(color: Colors.red, width: 2.0),
+                              borderRadius: BorderRadius.circular(10.0),
+                            ),
+                          ),
+                          validator: _validators[index], // NEW: Assign the correct validator
+                          keyboardType: _getKeyboardType(fieldName), // NEW: Set keyboard type
+                        ),
+                      );
+                    }).toList(),
+                    const SizedBox(height: 40),
+                    _isLoading
+                        ? Center(
+                            child: SizedBox(
+                              width: 100,
+                              height: 100,
+                              child: const CircularProgressIndicator(strokeWidth: 5),
+                            ),
+                          )
+                        : ElevatedButton(
+                            onPressed: _saveAndSendApiData,
+                            style: ElevatedButton.styleFrom(
+                              elevation: 20,
+                              backgroundColor: Colors.purple[500],
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 50,
+                                vertical: 15,
+                              ),
+                              shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(10.0),
                               ),
                             ),
+                            child: const Text(
+                              "Αποθήκευση",
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                           ),
-                        );
-                      }).toList(),
-                      const SizedBox(height: 40),
-                      ElevatedButton(
-                        onPressed: _saveAndSendApiData,
-                        style: ElevatedButton.styleFrom(
-                          elevation: 20,
-                          backgroundColor: Colors.purple[500],
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 50,
-                            vertical: 15,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10.0),
-                          ),
-                        ),
-                        child: const Text(
-                          "Αποθήκευση", // "Save"
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
+                  ],
                 ),
               ),
-            ],
+            ),
           ),
         ],
       ),
