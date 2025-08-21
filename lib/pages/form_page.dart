@@ -87,7 +87,17 @@ class _FormPageState extends State<FormPage> {
       return 'Παρακαλώ εισάγετε τον αριθμό τηλεφώνου σας.';
     }
     if (!RegExp(r'^\d{10}$').hasMatch(value)) {
-      return 'Παρακαλώ εισάγετε έναν έγκυρο 10-ψήφιο αριθμό.';
+      return 'Παρακαλώ εισάγετε έναν έγκυρο αριθμό.';
+    }
+    return null;
+  }
+
+  String? _validateDateOfBirth(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'Παρακαλώ εισάγετε την ημερομηνία γέννησης σας.';
+    }
+    if (!RegExp(r'^\d{2}/\d{2}/\d{4}$').hasMatch(value)) {
+      return 'Παρακαλώ εισάγετε μια έγκυρη ημερομηνία';
     }
     return null;
   }
@@ -96,7 +106,7 @@ class _FormPageState extends State<FormPage> {
   late final List<String? Function(String?)> _validators = [
     _validateGeneric,      // Όνομα
     _validateGeneric,      // Επώνυμο
-    _validateGeneric,      // Ημ/νια Γέννησης
+    _validateDateOfBirth,      // Ημ/νια Γέννησης
     _validateGeneric,      // ΑΔΤ
     _validateGeneric,      // Εθνικότητα
     _validatePhoneNumber,  // Τηλέφωνο
@@ -106,11 +116,11 @@ class _FormPageState extends State<FormPage> {
   // Helper method to determine keyboard type
   TextInputType _getKeyboardType(String fieldName) {
     switch (fieldName) {
-      case 'Email':
+      case 'EMAIL':
         return TextInputType.emailAddress;
-      case 'Τηλέφωνο':
+      case 'TELEPHONE':
         return TextInputType.phone;
-      // case 'Ημ/νια Γέννησης':
+      // case 'DATEOFBIRTH':
       //   return TextInputType.datetime;
       default:
         return TextInputType.text;
@@ -158,8 +168,6 @@ class _FormPageState extends State<FormPage> {
       );
       return;
     }
-
-    // Manual validation loop is now redundant and removed
 
     final Map<String, dynamic> customerData = {};
     for (var i = 0; i < inputFields.length; i++) {
@@ -345,7 +353,7 @@ class _FormPageState extends State<FormPage> {
                       String fieldName = entry.value;
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 16.0),
-                        child: TextFormField( // NEW: Replaced TextField with TextFormField
+                        child: TextFormField(
                           controller: _controllers[index],
                           style: const TextStyle(color: Colors.black),
                           decoration: InputDecoration(
@@ -366,17 +374,17 @@ class _FormPageState extends State<FormPage> {
                               ),
                               borderRadius: BorderRadius.circular(10.0),
                             ),
-                            errorBorder: OutlineInputBorder( // NEW: Error border style
+                            errorBorder: OutlineInputBorder(
                               borderSide: const BorderSide(color: Colors.red, width: 2.0),
                               borderRadius: BorderRadius.circular(10.0),
                             ),
-                            focusedErrorBorder: OutlineInputBorder( // NEW: Error border when focused
+                            focusedErrorBorder: OutlineInputBorder(
                               borderSide: const BorderSide(color: Colors.red, width: 2.0),
                               borderRadius: BorderRadius.circular(10.0),
                             ),
                           ),
-                          validator: _validators[index], // NEW: Assign the correct validator
-                          keyboardType: _getKeyboardType(fieldName), // NEW: Set keyboard type
+                          validator: _validators[index],
+                          keyboardType: _getKeyboardType(fields[index]),
                         ),
                       );
                     }).toList(),
