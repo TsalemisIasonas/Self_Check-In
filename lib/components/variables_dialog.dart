@@ -13,6 +13,17 @@ class VariablesDialog extends StatelessWidget {
     required this.saveParameters,
   });
 
+  TextInputType _getKeyboardType(String fieldName) {
+    switch (fieldName) {
+      case 'ipaddress':
+        return TextInputType.numberWithOptions(decimal: true);
+      case 'port':
+        return TextInputType.number;
+      default:
+        return TextInputType.text;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
@@ -54,6 +65,7 @@ class VariablesDialog extends StatelessWidget {
                       borderRadius: BorderRadius.circular(10.0),
                     ),
                   ),
+                  keyboardType: _getKeyboardType(fieldName)
                 ),
               );
             }).toList(),

@@ -5,6 +5,7 @@ import 'package:path_provider/path_provider.dart';
 import '../components/my_alert_dialog.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+//import 'package:uuid/uuid.dart';
 
 class FormPage extends StatefulWidget {
   const FormPage({super.key});
@@ -20,8 +21,11 @@ class _FormPageState extends State<FormPage> {
   final List<String> inputFields = [
     'Όνομα / Name',
     'Επώνυμο / Surname',
-    'Ημ/νια Γέννησης / Date of Birth',
+    'Ημ. Γέννησης - Date of Birth (mm/dd/yyyy)',
     'ΑΔΤ / ID Number',
+    'Οδός / Street',
+    'Αριθμός Οδού / Street Number',
+    'Πόλη / City',
     'Εθνικότητα / Nationality',
     'Τηλέφωνο / Phone',
     'Email',
@@ -32,6 +36,9 @@ class _FormPageState extends State<FormPage> {
     'LASTNAME',
     'DATEOFBIRTH',
     'DOCNUMBER',
+    'STREET',
+    'STREETNUMBER',
+    'CITY',
     'NATIONALITY',
     'TELEPHONE',
     'EMAIL',
@@ -104,13 +111,16 @@ class _FormPageState extends State<FormPage> {
 
   // Create a list of validator functions corresponding to the fields
   late final List<String? Function(String?)> _validators = [
-    _validateGeneric,      // Όνομα
-    _validateGeneric,      // Επώνυμο
-    _validateDateOfBirth,      // Ημ/νια Γέννησης
-    _validateGeneric,      // ΑΔΤ
-    _validateGeneric,      // Εθνικότητα
-    _validatePhoneNumber,  // Τηλέφωνο
-    _validateEmail,        // Email
+    _validateGeneric, // Όνομα
+    _validateGeneric, // Επώνυμο
+    _validateDateOfBirth, // Ημ/νια Γέννησης
+    _validateGeneric, // ΑΔΤ
+    _validateGeneric, // Οδός
+    _validateGeneric, // Αριθμός Οδού
+    _validateGeneric, // Πόλη
+    _validateGeneric, // Εθνικότητα
+    _validatePhoneNumber, // Τηλέφωνο
+    _validateEmail, // Email
   ];
 
   // Helper method to determine keyboard type
@@ -120,8 +130,8 @@ class _FormPageState extends State<FormPage> {
         return TextInputType.emailAddress;
       case 'TELEPHONE':
         return TextInputType.phone;
-      // case 'DATEOFBIRTH':
-      //   return TextInputType.datetime;
+      case 'STREETNUMBER':
+        return TextInputType.number;
       default:
         return TextInputType.text;
     }
@@ -162,23 +172,42 @@ class _FormPageState extends State<FormPage> {
     if (!_formKey.currentState!.validate()) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Παρακαλώ συμπληρώστε σωστά όλα τα πεδία.', style: TextStyle(color: Colors.white)),
+          content: Text(
+            'Παρακαλώ συμπληρώστε σωστά όλα τα πεδία.',
+            style: TextStyle(color: Colors.white),
+          ),
           backgroundColor: Colors.red,
         ),
       );
       return;
     }
 
-    final Map<String, dynamic> customerData = {};
-    for (var i = 0; i < inputFields.length; i++) {
-      customerData[fields[i]] = _controllers[i].text.trim();
-    }
+    final Map<String, dynamic> customerData = {
+      "Name": _controllers[0].text.trim(),
+      "Surname": _controllers[1].text.trim(),
+      "Full Name":
+          '${_controllers[0].text.trim()} ${_controllers[1].text.trim()}',
+      "Email": _controllers[9].text.trim(), // DistinctiveTitle
+      "Address": _controllers[4].text.trim(),
+      "StreetNumber": _controllers[5].text.trim(),
+      "City": _controllers[6].text.trim(),
+      "IsRetail": "1", // send as string
+      "Phone": _controllers[7].text.trim(),
+      "DocNumber": _controllers[3].text.trim(),
+      "DateofBirth": _controllers[2].text.trim(),
+    };
+
+    //"CountryId": "GR",
+
+    // "PostCode": "10434",
+    // "Phone": _controllers[5].text.trim(),
 
     setState(() {
       _isLoading = true;
     });
 
     await apiTest(customerData);
+    //print(jsonEncode(customerData));
 
     setState(() {
       _isLoading = false;
@@ -226,7 +255,10 @@ class _FormPageState extends State<FormPage> {
 
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Επιτυχής Σύνδεση', style: TextStyle(color: Colors.white)),
+              content: Text(
+                'Επιτυχής Σύνδεση',
+                style: TextStyle(color: Colors.white),
+              ),
               backgroundColor: Colors.green,
             ),
           );
@@ -237,7 +269,10 @@ class _FormPageState extends State<FormPage> {
         print('Request failed with status: ${response.statusCode}.');
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Αποτυχία αιτήματος: ${response.statusCode}', style: const TextStyle(color: Colors.white)),
+            content: Text(
+              'Αποτυχία αιτήματος: ${response.statusCode}',
+              style: const TextStyle(color: Colors.white),
+            ),
             backgroundColor: Colors.red,
           ),
         );
@@ -247,7 +282,10 @@ class _FormPageState extends State<FormPage> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Παρουσιάστηκε σφάλμα: $e', style: const TextStyle(color: Colors.white)),
+          content: Text(
+            'Παρουσιάστηκε σφάλμα: $e',
+            style: const TextStyle(color: Colors.white),
+          ),
           backgroundColor: Colors.red,
         ),
       );
@@ -276,12 +314,14 @@ class _FormPageState extends State<FormPage> {
 
     final Map<String, dynamic> requestBody = {
       "cookie": _cookie,
-      "apicode": "4ZK2NFG2YGIG9YA",
-      "entitycode": "GCSInsertCust",
+      "apicode": "${parameters?['apicode']}",
+      "entitycode": "ImportCustHotel",
       "packagenumber": 1,
       "packagesize": 2000,
-      "data": jsonEncode({"Customers": [formData]}),
+      "data": jsonEncode(formData),
     };
+
+    print("COOKIE $_cookie \n\n\n");
 
     try {
       final response = await http.post(
@@ -325,107 +365,117 @@ class _FormPageState extends State<FormPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        title: const Text("Check In", style: TextStyle(color: Colors.black)),
-        backgroundColor: Colors.grey[200],
-        elevation: 0,
+  resizeToAvoidBottomInset: true,
+  backgroundColor: Colors.white,
+  appBar: AppBar(
+    title: const Text("Check In", style: TextStyle(color: Colors.black)),
+    backgroundColor: Colors.grey[200],
+    elevation: 0,
+  ),
+  body: Stack(
+    children: [
+      // Background image
+      Image.asset(
+        'assets/images/background.jpg',
+        fit: BoxFit.cover,
+        width: double.infinity,
+        height: double.infinity,
       ),
-      body: Stack(
-        children: [
-          Image.asset(
-            'assets/images/background.jpg',
-            fit: BoxFit.cover,
-            width: double.infinity,
-            height: double.infinity,
-          ),
-          Padding(
-            padding: const EdgeInsets.all(16),
+
+      // Scrollable form
+      LayoutBuilder(
+        builder: (context, constraints) {
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
             child: SingleChildScrollView(
-              child: Form( // NEW: Form widget to enable validation
-                key: _formKey,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const SizedBox(height: 20),
-                    ...inputFields.asMap().entries.map((entry) {
-                      int index = entry.key;
-                      String fieldName = entry.value;
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 16.0),
-                        child: TextFormField(
-                          controller: _controllers[index],
-                          style: const TextStyle(color: Colors.black),
-                          decoration: InputDecoration(
-                            hintText: fieldName,
-                            hintStyle: const TextStyle(color: Colors.black54),
-                            filled: true,
-                            fillColor: Colors.white24,
-                            enabledBorder: OutlineInputBorder(
-                              borderSide: const BorderSide(
-                                color: Colors.black54,
+              // Make room for the bottom button
+              padding: EdgeInsets.only(bottom: 100),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  minHeight: constraints.maxHeight,
+                ),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const SizedBox(height: 20),
+                      ...inputFields.asMap().entries.map((entry) {
+                        int index = entry.key;
+                        String fieldName = entry.value;
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 16.0),
+                          child: TextFormField(
+                            controller: _controllers[index],
+                            style: const TextStyle(color: Colors.black),
+                            decoration: InputDecoration(
+                              hintText: fieldName,
+                              hintStyle: const TextStyle(color: Colors.black54),
+                              filled: true,
+                              fillColor: Colors.white24,
+                              enabledBorder: OutlineInputBorder(
+                                borderSide: const BorderSide(color: Colors.black54),
+                                borderRadius: BorderRadius.circular(10.0),
                               ),
-                              borderRadius: BorderRadius.circular(10.0),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderSide: const BorderSide(
-                                color: Color.fromARGB(255, 130, 110, 164),
-                                width: 2.0,
+                              focusedBorder: OutlineInputBorder(
+                                borderSide: const BorderSide(
+                                    color: Color.fromARGB(255, 130, 110, 164), width: 2.0),
+                                borderRadius: BorderRadius.circular(10.0),
                               ),
-                              borderRadius: BorderRadius.circular(10.0),
-                            ),
-                            errorBorder: OutlineInputBorder(
-                              borderSide: const BorderSide(color: Colors.red, width: 2.0),
-                              borderRadius: BorderRadius.circular(10.0),
-                            ),
-                            focusedErrorBorder: OutlineInputBorder(
-                              borderSide: const BorderSide(color: Colors.red, width: 2.0),
-                              borderRadius: BorderRadius.circular(10.0),
-                            ),
-                          ),
-                          validator: _validators[index],
-                          keyboardType: _getKeyboardType(fields[index]),
-                        ),
-                      );
-                    }).toList(),
-                    const SizedBox(height: 40),
-                    _isLoading
-                        ? Center(
-                            child: SizedBox(
-                              width: 100,
-                              height: 100,
-                              child: const CircularProgressIndicator(strokeWidth: 5),
-                            ),
-                          )
-                        : ElevatedButton(
-                            onPressed: _saveAndSendApiData,
-                            style: ElevatedButton.styleFrom(
-                              elevation: 20,
-                              backgroundColor: Colors.purple[500],
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 50,
-                                vertical: 15,
+                              errorBorder: OutlineInputBorder(
+                                borderSide: const BorderSide(color: Colors.red, width: 2.0),
+                                borderRadius: BorderRadius.circular(10.0),
                               ),
-                              shape: RoundedRectangleBorder(
+                              focusedErrorBorder: OutlineInputBorder(
+                                borderSide: const BorderSide(color: Colors.red, width: 2.0),
                                 borderRadius: BorderRadius.circular(10.0),
                               ),
                             ),
-                            child: const Text(
-                              "Αποθήκευση",
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
+                            validator: _validators[index],
+                            keyboardType: _getKeyboardType(fields[index]),
                           ),
-                  ],
+                        );
+                      }).toList(),
+                      const SizedBox(height: 40),
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
-        ],
+          );
+        },
       ),
-    );
+
+      Positioned(
+        left: 30,
+        right: 30,
+        bottom: 100,
+        child: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : ElevatedButton(
+                onPressed: _saveAndSendApiData,
+                style: ElevatedButton.styleFrom(
+                  elevation: 20,
+                  backgroundColor: Colors.purple[500],
+                  padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 15),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10.0),
+                  ),
+                ),
+                child: const Text(
+                  "Αποθήκευση",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+      ),
+    ],
+  ),
+);
+
+
   }
 }
