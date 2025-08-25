@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:pylon_hotel_self_checkin/components/process_indicator.dart';
 import '../components/my_alert_dialog.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
@@ -23,9 +24,6 @@ class _FormPageState extends State<FormPage> {
     'Επώνυμο / Surname',
     'Ημ. Γέννησης - Date of Birth (mm/dd/yyyy)',
     'ΑΔΤ / ID Number',
-    'Οδός / Street',
-    'Αριθμός Οδού / Street Number',
-    'Πόλη / City',
     'Εθνικότητα / Nationality',
     'Τηλέφωνο / Phone',
     'Email',
@@ -36,9 +34,6 @@ class _FormPageState extends State<FormPage> {
     'LASTNAME',
     'DATEOFBIRTH',
     'DOCNUMBER',
-    'STREET',
-    'STREETNUMBER',
-    'CITY',
     'NATIONALITY',
     'TELEPHONE',
     'EMAIL',
@@ -115,9 +110,6 @@ class _FormPageState extends State<FormPage> {
     _validateGeneric, // Επώνυμο
     _validateDateOfBirth, // Ημ/νια Γέννησης
     _validateGeneric, // ΑΔΤ
-    _validateGeneric, // Οδός
-    _validateGeneric, // Αριθμός Οδού
-    _validateGeneric, // Πόλη
     _validateGeneric, // Εθνικότητα
     _validatePhoneNumber, // Τηλέφωνο
     _validateEmail, // Email
@@ -130,8 +122,6 @@ class _FormPageState extends State<FormPage> {
         return TextInputType.emailAddress;
       case 'TELEPHONE':
         return TextInputType.phone;
-      case 'STREETNUMBER':
-        return TextInputType.number;
       default:
         return TextInputType.text;
     }
@@ -187,12 +177,9 @@ class _FormPageState extends State<FormPage> {
       "Surname": _controllers[1].text.trim(),
       "Full Name":
           '${_controllers[0].text.trim()} ${_controllers[1].text.trim()}',
-      "Email": _controllers[9].text.trim(), // DistinctiveTitle
-      "Address": _controllers[4].text.trim(),
-      "StreetNumber": _controllers[5].text.trim(),
-      "City": _controllers[6].text.trim(),
+      "Email": _controllers[6].text.trim(), // DistinctiveTitle
       "IsRetail": "1", // send as string
-      "Phone": _controllers[7].text.trim(),
+      "Phone": _controllers[5].text.trim(),
       "DocNumber": _controllers[3].text.trim(),
       "DateofBirth": _controllers[2].text.trim(),
     };
@@ -446,13 +433,16 @@ class _FormPageState extends State<FormPage> {
         },
       ),
 
+      _isLoading
+          ? const Center(child: ProcessIndicatorAnimation())
+          : const SizedBox.shrink(),
+
+
       Positioned(
-        left: 30,
-        right: 30,
-        bottom: 100,
-        child: _isLoading
-            ? const Center(child: CircularProgressIndicator())
-            : ElevatedButton(
+              left: 30,
+              right: 30,
+              bottom: 10,
+        child: ElevatedButton(
                 onPressed: _saveAndSendApiData,
                 style: ElevatedButton.styleFrom(
                   elevation: 20,
